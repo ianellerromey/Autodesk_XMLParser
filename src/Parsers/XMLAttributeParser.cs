@@ -9,7 +9,7 @@ namespace Autodesk
     {
       class XMLAttributeParser : XMLTextParser
       {
-        public Tuple<string, string> Parse(string text, ref int index)
+        public static Tuple<string, string> Parse(string text, ref int index)
         {
           var key = ParseKey(text, ref index); 
           WalkWhitespace(text, ref index);
@@ -18,11 +18,11 @@ namespace Autodesk
           return new Tuple<string, string>(key, value);
         }
         
-        private string ParseKey(string text, ref int index)
+        private static string ParseKey(string text, ref int index)
         {
           var keyBuilder = new StringBuilder();
 
-          while(true)
+          while (true)
           {
             var currChar = ReadChar(text, ref index);
 
@@ -46,23 +46,23 @@ namespace Autodesk
             }
             else
             {
-              throw new ArgumentException($"Invalid identifier character encountered at index {index}");
+              throw new ArgumentException($"Invalid character encountered at index {index}");
             }
           }
         }
 
-        private string ParseValue(string text, ref int index)
+        private static string ParseValue(string text, ref int index)
         {
           var delimiter = ReadChar(text, ref index);
 
           if (delimiter != c_singleQuote && delimiter != c_doubleQuote)
           {
-            throw new ArgumentException($"Invalid attribute value delimiter character encountered at index {index}");
+            throw new ArgumentException($"Invalid character encountered at index {index}");
           }
 
           var valueBuilder = new StringBuilder();
 
-          while(true)
+          while (true)
           {
             var currChar = ReadChar(text, ref index);
 

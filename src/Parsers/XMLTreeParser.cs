@@ -8,13 +8,11 @@ namespace Autodesk
     {
       class XMLTreeParser : XMLTextParser
       {
-        public XMLElement Parse(string text, ref int index)
+        public static XMLElement Parse(string text, ref int index)
         {
           WalkWhitespace(text, ref index);
 
-          var parser = new XMLElementParser();
-
-          return parser.Parse(text, ref index);
+          return XMLElementParser.Parse(text, ref index);
         }
       }
     }

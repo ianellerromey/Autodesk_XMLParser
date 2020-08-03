@@ -8,16 +8,16 @@ namespace Autodesk
     {
       class XMLContentParser : XMLTextParser
       {
-        public string Parse(string text, ref int index)
+        public static string Parse(string text, ref int index)
         {
           var contentBuilder = new StringBuilder();
 
           while (PeekChar(text, ref index) != c_openingBracket)
           {
-            var currChar = ReadChar(text, ref index);
+            contentBuilder.Append(ReadChar(text, ref index));
           }
 
-          return contentBuilder.ToString();
+          return contentBuilder.ToString().Trim();
         }
       }
     }

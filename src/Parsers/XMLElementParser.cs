@@ -10,26 +10,33 @@ namespace Autodesk
     {
       class XMLElementParser : XMLTextParser
       {
-        public XMLElement Parse(string text, ref int index)
+        private enum XMLElementState { Unclosed, Closed };
+
+        public static XMLElement Parse(string text, ref int index)
         {
           XMLElement element = new XMLElement();
 
-          ParseOpeningTagAndAttributes(text, ref index, element);
-          ParseContentAndChildrenAndClosingTag(text, ref index, element);
+          var state = ParseOpeningTagAndAttributes(text, ref index, element);
+
+          if (state != XMLElementState.Closed)
+          {
+            ParseContentAndChildrenAndClosingTag(text, ref index, element);
+          }
 
           return element;
         }
         
-        private void ParseOpeningTagAndAttributes(string text, ref int index, XMLElement element)
+        private static XMLElementState ParseOpeningTagAndAttributes(string text, ref int index, XMLElement element)
         {
           if (ReadChar(text, ref index) != c_openingBracket)
           {
             throw new ArgumentException($"Invalid character encountered at index {index}");
           }
 
+          var parsingState = XMLElementState.Unclosed;
           var tagNameBuilder = new StringBuilder();
 
-          while(true)
+          while (true)
           {
             var currChar = ReadChar(text, ref index);
 
@@ -38,6 +45,8 @@ namespace Autodesk
               // The tag has been parsed, walk to the closing bracket
 
               WalkToEndOfElement(text, ref index);
+
+              parsingState = XMLElementState.Closed;
             }
            else if (currChar == c_closingBracket)
             {
@@ -45,13 +54,15 @@ namespace Autodesk
 
               element.Tag = tagNameBuilder.ToString();
 
-              return;
+              return parsingState;
             }
             else if (char.IsWhiteSpace(currChar))
             {
               // The tag has been parsed, but there might be attributes
+
+              WalkWhitespace(text, ref index);
               
-              ParseAttribute(text, ref index, element);
+              ParseAttributes(text, ref index, element);
             }
             else if (c_validIdentifierCharacters.Contains(currChar))
             {
@@ -66,39 +77,23 @@ namespace Autodesk
           }
         }
 
-        private void ParseAttribute(string text, ref int index, XMLElement element)
+        private static XMLElementState ParseContentAndChildrenAndClosingTag(string text, ref int index, XMLElement element)
         {
-          WalkWhitespace(text, ref index);
-
-          while(PeekChar(text, ref index) != c_closingBracket)
-          {
-            var parser = new XMLAttributeParser();
-
-            var attribute = parser.Parse(text, ref index);
-
-            element.Attributes.Add(attribute.Item1, attribute.Item2);
-
-            WalkWhitespace(text, ref index);
-          }
-        }
-
-        private void ParseContentAndChildrenAndClosingTag(string text, ref int index, XMLElement element)
-        {
-          while(true)
+          while (true)
           {
             WalkWhitespace(text, ref index);
 
-            if(PeekChar(text, ref index) == c_openingBracket)
+            if (PeekChar(text, ref index) == c_openingBracket)
             {
               // An opening bracket could be a closing tag or a child element
 
               var indexPlus = index + 1;
 
-              if(PeekChar(text, ref indexPlus) == c_slash)
+              if (PeekChar(text, ref indexPlus) == c_slash)
               {
                 ParseClosingTag(text, ref index, element);
 
-                return;
+                return XMLElementState.Closed;
               }
               else
               {
@@ -114,13 +109,23 @@ namespace Autodesk
           }
         }
 
-        private void ParseContent(string text, ref int index, XMLElement element)
+        private static void ParseAttributes(string text, ref int index, XMLElement element)
         {
-          var parser = new XMLContentParser();
+          while (PeekChar(text, ref index) != c_closingBracket && PeekChar(text, ref index) != c_slash)
+          {
+            var attribute = XMLAttributeParser.Parse(text, ref index);
 
-          var content = parser.Parse(text, ref index);
+            element.Attributes.Add(attribute.Item1, attribute.Item2);
 
-          if(element.Content == null)
+            WalkWhitespace(text, ref index);
+          }
+        }
+
+        private static void ParseContent(string text, ref int index, XMLElement element)
+        {
+          var content = XMLContentParser.Parse(text, ref index);
+
+          if (element.Content == null)
           {
             element.Content = content;
           }
@@ -131,16 +136,14 @@ namespace Autodesk
           }
         }
 
-        private void ParseChild(string text, ref int index, XMLElement element)
+        private static void ParseChild(string text, ref int index, XMLElement element)
         {
-          var parser = new XMLElementParser();
-
-          var childElement = parser.Parse(text, ref index);
+          var childElement = XMLElementParser.Parse(text, ref index);
 
           element.Children.Add(childElement);
         }
 
-        private void ParseClosingTag(string text, ref int index, XMLElement element)
+        private static void ParseClosingTag(string text, ref int index, XMLElement element)
         {
           if (ReadChar(text, ref index) != c_openingBracket)
           {
@@ -154,7 +157,7 @@ namespace Autodesk
 
           var tagNameBuilder = new StringBuilder();
 
-          while(true)
+          while (true)
           {
             var currChar = ReadChar(text, ref index);
 
@@ -175,7 +178,7 @@ namespace Autodesk
             {
               // The tag has been parsed, walk to the closing bracket
               
-              WalkWhitespace(text, ref index);
+              WalkToEndOfElement(text, ref index);
             }
             else if (c_validIdentifierCharacters.Contains(currChar))
             {
@@ -190,11 +193,11 @@ namespace Autodesk
           }
         }
 
-        private void WalkToEndOfElement(string text, ref int index)
+        private static void WalkToEndOfElement(string text, ref int index)
         {
           WalkWhitespace(text, ref index);
 
-          if(PeekChar(text, ref index) != c_closingBracket)
+          if (PeekChar(text, ref index) != c_closingBracket)
           {
             throw new ArgumentException($"Invalid character encountered at index {index}");
           }

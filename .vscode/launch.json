@@ -17,7 +17,8 @@
               "${workspaceFolder}/assets/two_nowhitespace.xml",
               "${workspaceFolder}/assets/three_nowhitespace.xml",
               "${workspaceFolder}/assets/four_whitespace.xml",
-              "${workspaceFolder}/assets/five_whitespace.xml"
+              "${workspaceFolder}/assets/five_whitespace.xml",
+              "${workspaceFolder}/assets/six_nowhitespace.xml"
             ],
             "cwd": "${workspaceFolder}",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console

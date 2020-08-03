@@ -11,14 +11,13 @@ namespace Autodesk
       static void Main(string[] args)
       {
         var trees = new List<XMLElement>();
-        var treeBuilder = new XMLTreeBuilder();
 
         foreach (var fileName in args)
         {
           try
           {
             var provider = new TextFromFileProvider(fileName);
-            var tree = treeBuilder.BuildTree(provider);
+            var tree = XMLTreeBuilder.BuildTree(provider);
             trees.Add(tree);
           }
           catch(Exception e)
