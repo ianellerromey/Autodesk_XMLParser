@@ -5,6 +5,7 @@ This console application accepts as input any number of files containing either 
 * Build a tree of elements
 * Parse attributes
 * Parse mixed content fields
+* Throw errors when encountering invalid/unclosed elements
 
 And will not:
 
